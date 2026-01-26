@@ -5,20 +5,20 @@ Tools for simulating stochastic processes, chaotic systems,
 and time-varying autoregressive models.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Getting Started
 
    installation
    quickstart
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Tutorials
 
-   notebooks/tutorials/simulations
+   tutorials/simulations.ipynb
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: API Reference
 
    api/generators

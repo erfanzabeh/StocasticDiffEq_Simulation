@@ -53,7 +53,7 @@ All tools inherit from the Tool abstract base class.
 
 from .psd import PSDTool
 from .acf import ACFTool
-from .hilbert import HilbertTool, EnvelopeTool
+from .hilbert import HilbertTool, EnvelopeTool, EnvelopeNormalizeTool
 from .surrogate import IAFFTSurrogateTool, FourierSurrogateTool
 from .bicoherence import BicoherenceTool
 from .spectrogram import SpectrogramTool
@@ -67,6 +67,7 @@ __all__ = [
     "ACFTool",
     "HilbertTool",
     "EnvelopeTool",
+    "EnvelopeNormalizeTool",
     "IAFFTSurrogateTool",
     "FourierSurrogateTool",
     "BicoherenceTool",

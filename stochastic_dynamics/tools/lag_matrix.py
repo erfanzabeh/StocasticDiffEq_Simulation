@@ -87,51 +87,6 @@ class LagMatrixTool(Tool):
         
         return X, y
     
-    def fit_ols(
-        self,
-        x: np.ndarray,
-        fs: float = 1.0
-    ) -> dict:
-        """
-        Fit AR(p) model via ordinary least squares.
-        
-        Parameters
-        ----------
-        x : np.ndarray
-            Input signal (1D).
-        fs : float
-            Sampling frequency.
-        
-        Returns
-        -------
-        dict with keys:
-            coef : AR coefficients
-            resid : Residuals
-            sigma2 : Residual variance
-            AIC, BIC : Information criteria
-            y, yhat : True and predicted values
-        """
-        X, y = self(x, fs)
-        coef, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
-        yhat = X @ coef
-        resid = y - yhat
-        
-        n = len(y)
-        k = len(coef)
-        sigma2 = (resid @ resid) / n
-        AIC = 2 * k + n * np.log(sigma2)
-        BIC = k * np.log(n) + n * np.log(sigma2)
-        
-        return {
-            'coef': coef,
-            'resid': resid,
-            'sigma2': sigma2,
-            'AIC': AIC,
-            'BIC': BIC,
-            'y': y,
-            'yhat': yhat,
-        }
-    
     @property
     def params(self) -> dict:
         return {

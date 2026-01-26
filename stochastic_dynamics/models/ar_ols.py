@@ -34,8 +34,9 @@ class ARModel:
     -------
     >>> model = ARModel(p=3)
     >>> model.fit(x_train)
-    >>> y_pred = model.predict(x_test)
-    >>> forecast = model.forecast(x_test, horizon=10)
+    >>> y_pred = model.predict(x_train)
+    >>> print(model.aic(x_train[p:], y_pred))
+    >>> print(model.bic(x_train[p:], y_pred))
     """
     
     def __init__(self, p: int):
@@ -43,6 +44,7 @@ class ARModel:
         self.coeffs: Optional[np.ndarray] = None
         self.intercept: Optional[float] = None
         self.residual_std: Optional[float] = None
+        self._n_samples: Optional[int] = None  # sample size used for fitting
     
     def fit(self, x: np.ndarray) -> "ARModel":
         """
@@ -78,8 +80,53 @@ class ARModel:
         y_hat = X_with_intercept @ beta
         residuals = y - y_hat
         self.residual_std = float(np.std(residuals))
+        self._n_samples = len(y)
         
         return self
+    
+    def aic(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
+        """
+        Compute Akaike Information Criterion.
+        
+        Parameters
+        ----------
+        y_true : ndarray
+            True values
+        y_pred : ndarray
+            Predicted values
+        
+        Returns
+        -------
+        aic : float
+            AIC value (lower is better)
+        """
+        n = len(y_true)
+        k = self.p + 1  # p coefficients + intercept
+        rss = np.sum((y_true - y_pred)**2)
+        sigma2 = rss / max(n, 1)
+        return n * np.log(sigma2 + 1e-12) + 2 * k
+    
+    def bic(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
+        """
+        Compute Bayesian Information Criterion.
+        
+        Parameters
+        ----------
+        y_true : ndarray
+            True values
+        y_pred : ndarray
+            Predicted values
+        
+        Returns
+        -------
+        bic : float
+            BIC value (lower is better)
+        """
+        n = len(y_true)
+        k = self.p + 1  # p coefficients + intercept
+        rss = np.sum((y_true - y_pred)**2)
+        sigma2 = rss / max(n, 1)
+        return n * np.log(sigma2 + 1e-12) + k * np.log(max(n, 2))
     
     def predict(self, x: np.ndarray) -> np.ndarray:
         """
@@ -136,6 +183,79 @@ class ARModel:
             buffer.append(y_next)
         
         return np.array(forecast)
+    
+    def hybrid_predict(
+        self, 
+        x: np.ndarray, 
+        start_idx: int, 
+        n_steps: int, 
+        refresh_every: int = 1
+    ) -> np.ndarray:
+        """
+        Controllable k-step prediction with periodic ground-truth refresh.
+        
+        This is a hybrid between teacher forcing (refresh_every=1) and 
+        pure free-running forecast (refresh_every >= n_steps). Useful for
+        evaluating how prediction error accumulates over multiple steps.
+        
+        Parameters
+        ----------
+        x : ndarray, shape (T,)
+            Full time series (ground truth)
+        start_idx : int
+            Index in x where prediction begins (must be >= p)
+        n_steps : int
+            Number of steps to predict
+        refresh_every : int, default=1
+            How often to reset history buffer to ground truth.
+            - 1: classic one-step (teacher forcing every step)
+            - k: run k-1 steps open-loop, then refresh
+            - >= n_steps: pure free-running (no refresh)
+        
+        Returns
+        -------
+        predictions : ndarray, shape (n_steps,)
+            Predicted values starting at index start_idx
+        
+        Example
+        -------
+        >>> model = ARModel(p=5).fit(x_train)
+        >>> # 5-step lookahead with refresh every 5 steps
+        >>> y_pred = model.hybrid_predict(x_full, start_idx=1000, n_steps=500, refresh_every=5)
+        >>> # Compare: pure 1-step (same as predict on x[1000:1500])
+        >>> y_1step = model.hybrid_predict(x_full, start_idx=1000, n_steps=500, refresh_every=1)
+        """
+        if self.coeffs is None:
+            raise ValueError("Model not fitted. Call fit() first.")
+        
+        p = self.p
+        if start_idx < p:
+            raise ValueError(f"start_idx must be >= p={p}")
+        if start_idx + n_steps > len(x):
+            raise ValueError(f"Not enough data: need {start_idx + n_steps} samples, have {len(x)}")
+        
+        refresh_every = max(1, int(refresh_every))
+        predictions = []
+        
+        # Initialize history buffer with true values
+        history = list(x[start_idx - p : start_idx])
+        
+        for t in range(n_steps):
+            # Refresh history with ground truth periodically
+            if (t % refresh_every) == 0:
+                abs_idx = start_idx + t
+                history = list(x[abs_idx - p : abs_idx])
+            
+            # Predict next value: coeffs are [a_1, ..., a_p] for lags [x_{t-1}, ..., x_{t-p}]
+            lags = np.array(history[::-1])  # reverse to match [x_{t-1}, ..., x_{t-p}]
+            y_hat = self.intercept + np.dot(self.coeffs, lags)
+            predictions.append(y_hat)
+            
+            # Update history buffer (slide window)
+            history.pop(0)
+            history.append(y_hat)
+        
+        return np.array(predictions)
     
     def is_stable(self) -> bool:
         """

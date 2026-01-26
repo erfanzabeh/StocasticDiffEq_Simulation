@@ -216,3 +216,4 @@ __marimo__/
 .streamlit/secrets.toml
 
 *copilot-instructions.md
+notebooks/data/*
