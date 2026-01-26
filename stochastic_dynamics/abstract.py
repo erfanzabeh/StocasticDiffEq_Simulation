@@ -180,3 +180,86 @@ class Tool(ABC):
     def params(self) -> dict:
         """Dictionary of tool parameters."""
         pass
+
+
+class Processing(ABC):
+    """
+    Abstract base class for domain-specific processing pipelines.
+    
+    Contract:
+    - Composes Tools into domain-specific workflows
+    - __call__(x, fs, **kwargs) -> processed result
+    - preprocess(x, fs) -> preprocessed signal
+    - Maintains internal state for multi-step pipelines
+    - Provides access to intermediate results
+    
+    Unlike Tools (stateless, single operation), Processing pipelines:
+    - Are stateful (store intermediate results)
+    - Combine multiple Tools in sequence
+    - Include domain-specific logic (e.g., ripple detection, event extraction)
+    
+    Example
+    -------
+    >>> pipeline = MouseLFPPipeline(fs=20000, ripple_band=(80, 140))
+    >>> result = pipeline(raw_lfp)
+    >>> ripples = pipeline.detect_ripples(threshold_sd=3.0)
+    >>> envelope = pipeline.envelope_  # Access intermediate result
+    """
+    
+    def __init__(self, fs: float):
+        self.fs = fs
+        self._preprocessed: Optional[np.ndarray] = None
+        self._intermediate: dict = {}
+    
+    @abstractmethod
+    def __call__(self, x: np.ndarray, **kwargs) -> np.ndarray:
+        """
+        Run full processing pipeline.
+        
+        Parameters
+        ----------
+        x : np.ndarray
+            Raw input signal.
+        **kwargs
+            Pipeline-specific parameters.
+        
+        Returns
+        -------
+        np.ndarray
+            Processed signal.
+        """
+        pass
+    
+    @abstractmethod
+    def preprocess(self, x: np.ndarray) -> np.ndarray:
+        """
+        Apply preprocessing steps (filtering, artifact removal, etc.).
+        
+        Parameters
+        ----------
+        x : np.ndarray
+            Raw input signal.
+        
+        Returns
+        -------
+        np.ndarray
+            Preprocessed signal.
+        """
+        pass
+    
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Name of the processing pipeline."""
+        pass
+    
+    @property
+    @abstractmethod
+    def params(self) -> dict:
+        """Dictionary of pipeline parameters."""
+        pass
+    
+    @property
+    def intermediate(self) -> dict:
+        """Access intermediate results from last pipeline run."""
+        return self._intermediate

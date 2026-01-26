@@ -15,6 +15,8 @@ from .bicoherence import BicoherenceTool
 from .spectrogram import SpectrogramTool
 from .bandpass import BandpassTool
 from .lag_matrix import LagMatrixTool
+from .notch import NotchTool
+from .downsample import DownsampleTool
 
 __all__ = [
     "PSDTool",
@@ -27,4 +29,6 @@ __all__ = [
     "SpectrogramTool",
     "BandpassTool",
     "LagMatrixTool",
+    "NotchTool",
+    "DownsampleTool",
 ]
