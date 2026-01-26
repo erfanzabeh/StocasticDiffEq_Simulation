@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stochastic_dynamics"
+version = "0.1.0"
+description = "Tools for simulating stochastic processes, chaotic systems, and time-varying autoregressive models"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.21",
+    "jax>=0.4",
+    "jaxlib>=0.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "matplotlib",
+    "scipy",
+    "pytest",
+]
