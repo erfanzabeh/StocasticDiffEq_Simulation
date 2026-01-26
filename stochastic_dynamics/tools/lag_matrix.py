@@ -133,10 +133,6 @@ class LagMatrixTool(Tool):
         }
     
     @property
-    def name(self) -> str:
-        return "Lag Matrix"
-    
-    @property
     def params(self) -> dict:
         return {
             "p": self.p,

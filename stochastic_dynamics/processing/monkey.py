@@ -319,10 +319,6 @@ class MonkeyLFPPipeline(Processing):
         return self._time
     
     @property
-    def name(self) -> str:
-        return "Monkey LFP Pipeline"
-    
-    @property
     def params(self) -> dict:
         return {
             "fs": self.fs,

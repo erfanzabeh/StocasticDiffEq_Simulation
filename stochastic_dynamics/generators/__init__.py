@@ -4,12 +4,28 @@ Generators
 
 Signal generators for various stochastic and deterministic systems.
 
-Available Generators:
-- LorenzGenerator: Classic 3D chaotic attractor (RK4)
-- TVARGenerator: Univariate time-varying AR(2)
-- TVVARGenerator: Multivariate 3D time-varying VAR(2)
-- OUGenerator: Ornstein-Uhlenbeck process
-- NoiseGenerator: White and colored (1/f) noise
+.. list-table::
+   :header-rows: 1
+   :widths: 25 55 20
+
+   * - Class
+     - Description
+     - Validated
+   * - :class:`LorenzGenerator`
+     - Classic 3D chaotic attractor (RK4)
+     - ✅
+   * - :class:`TVARGenerator`
+     - Univariate time-varying AR(2)
+     - ✅
+   * - :class:`TVVARGenerator`
+     - Multivariate 3D time-varying VAR(2)
+     - ✅
+   * - :class:`OUGenerator`
+     - Ornstein-Uhlenbeck process
+     - ✅
+   * - :class:`NoiseGenerator`
+     - White and colored (1/f) noise
+     - ✅
 """
 
 from .lorenz import LorenzGenerator

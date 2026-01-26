@@ -74,10 +74,6 @@ class BandpassTool(Tool):
         return filtfilt(b, a, x)
     
     @property
-    def name(self) -> str:
-        return "Bandpass Filter"
-    
-    @property
     def params(self) -> dict:
         return {
             "lowcut": self.lowcut,

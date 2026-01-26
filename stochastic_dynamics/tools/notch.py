@@ -71,10 +71,6 @@ class NotchTool(Tool):
         return y
     
     @property
-    def name(self) -> str:
-        return "Notch Filter"
-    
-    @property
     def params(self) -> dict:
         return {
             "freqs": self.freqs,

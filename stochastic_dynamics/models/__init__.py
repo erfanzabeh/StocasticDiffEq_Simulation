@@ -1,18 +1,38 @@
 """
-Models for Time-Varying AR Estimation
-======================================
+Models
+======
 
 This module contains neural network and classical models for estimating
 time-varying autoregressive (TVAR) coefficients.
 
-Models:
-- ARModel: Classic AR(p) with OLS (baseline)
-- NeuralODE_TVAR: Neural ODE with Levinson-Durbin stability
-- LagAttentionTVAR: Transformer attention over lag bank
-- LagAttentionTVARFast: Bilinear scoring (no transformer)
-- TransformerAR: CLS token over fixed lag sequence
-- MLPTVAR: Hyper-network MLP
-- TVAROperator: Neural operator with continuous delay kernel
+.. list-table::
+   :header-rows: 1
+   :widths: 25 55 20
+
+   * - Class
+     - Description
+     - Validated
+   * - :class:`ARModel`
+     - Classic AR(p) with OLS (baseline)
+     - ✅
+   * - :class:`NeuralODE_TVAR`
+     - Neural ODE with Levinson-Durbin stability
+     - ✅
+   * - :class:`LagAttentionTVAR`
+     - Transformer attention over lag bank
+     - ✅
+   * - :class:`LagAttentionTVARFast`
+     - Bilinear scoring (no transformer)
+     - ✅
+   * - :class:`TransformerAR`
+     - CLS token over fixed lag sequence
+     - ✅
+   * - :class:`MLPTVAR`
+     - Hyper-network MLP
+     - ✅
+   * - :class:`TVAROperator`
+     - Neural operator with continuous delay kernel
+     - ✅
 """
 
 from .ar_ols import ARModel

@@ -68,10 +68,6 @@ class DownsampleTool(Tool):
         return x_down, new_fs
     
     @property
-    def name(self) -> str:
-        return "Downsample"
-    
-    @property
     def params(self) -> dict:
         return {
             "target_fs": self.target_fs,

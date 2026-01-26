@@ -109,10 +109,6 @@ class PSDTool(Tool):
         return freqs, psd_accum
     
     @property
-    def name(self) -> str:
-        return "PSD (Welch)"
-    
-    @property
     def params(self) -> dict:
         return {
             "nperseg": self.nperseg,

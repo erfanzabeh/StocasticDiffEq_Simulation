@@ -75,10 +75,6 @@ class HilbertTool(Tool):
         return np.fft.ifft(X * h)
     
     @property
-    def name(self) -> str:
-        return "Hilbert Transform"
-    
-    @property
     def params(self) -> dict:
         return {"use_scipy": self.use_scipy}
 
@@ -134,10 +130,6 @@ class EnvelopeTool(Tool):
         """Compute instantaneous frequency in Hz."""
         phase = self.instantaneous_phase(x, fs)
         return np.gradient(phase) * fs / (2 * np.pi)
-    
-    @property
-    def name(self) -> str:
-        return "Envelope"
     
     @property
     def params(self) -> dict:

@@ -87,10 +87,6 @@ class IAFFTSurrogateTool(Tool):
         return s
     
     @property
-    def name(self) -> str:
-        return "IAAFT Surrogate"
-    
-    @property
     def params(self) -> dict:
         return {"n_iter": self.n_iter, "seed": self.seed}
 
@@ -150,10 +146,6 @@ class FourierSurrogateTool(Tool):
         
         X_surrogate = np.abs(X) * np.exp(1j * random_phases)
         return np.fft.irfft(X_surrogate, n=len(x))
-    
-    @property
-    def name(self) -> str:
-        return "Fourier Surrogate"
     
     @property
     def params(self) -> dict:

@@ -171,12 +171,6 @@ class Tool(ABC):
     
     @property
     @abstractmethod
-    def name(self) -> str:
-        """Name of the analysis tool."""
-        pass
-    
-    @property
-    @abstractmethod
     def params(self) -> dict:
         """Dictionary of tool parameters."""
         pass
@@ -245,12 +239,6 @@ class Processing(ABC):
         np.ndarray
             Preprocessed signal.
         """
-        pass
-    
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        """Name of the processing pipeline."""
         pass
     
     @property

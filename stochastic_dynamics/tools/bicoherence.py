@@ -115,10 +115,6 @@ class BicoherenceTool(Tool):
         return freqs_out, bic
     
     @property
-    def name(self) -> str:
-        return "Bicoherence"
-    
-    @property
     def params(self) -> dict:
         return {
             "nperseg": self.nperseg,

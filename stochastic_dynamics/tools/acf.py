@@ -87,10 +87,6 @@ class ACFTool(Tool):
         return acf
     
     @property
-    def name(self) -> str:
-        return "Autocorrelation"
-    
-    @property
     def params(self) -> dict:
         return {
             "max_lag": self.max_lag,

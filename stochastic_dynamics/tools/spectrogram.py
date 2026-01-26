@@ -79,10 +79,6 @@ class SpectrogramTool(Tool):
         return freqs, times, Sxx
     
     @property
-    def name(self) -> str:
-        return "Spectrogram"
-    
-    @property
     def params(self) -> dict:
         return {
             "nperseg": self.nperseg,
