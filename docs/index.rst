@@ -16,8 +16,8 @@ and time-varying autoregressive models.
    :caption: Tutorials
 
    tutorials/simulations.ipynb
-   tutorials/mouse.ipynb
    tutorials/monkey.ipynb
+   tutorials/mouse.ipynb
 
 .. toctree::
    :maxdepth: 1

@@ -1,4 +1,5 @@
-.. automodule:: stochastic_dynamics.embedders
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Embedders
+=========
+
+.. autofunction:: stochastic_dynamics.embedders.embed
+

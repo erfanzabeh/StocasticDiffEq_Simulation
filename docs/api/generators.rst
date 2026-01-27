@@ -1,5 +1,4 @@
-.. automodule:: stochastic_dynamics.generators
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Generators
+==========
 
+.. autofunction:: stochastic_dynamics.generators.lorenz
