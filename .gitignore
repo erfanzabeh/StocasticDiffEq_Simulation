@@ -217,3 +217,5 @@ __marimo__/
 
 *copilot-instructions.md
 notebooks/data/*
+*.npz
+*.pt
