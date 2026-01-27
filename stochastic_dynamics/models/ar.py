@@ -12,7 +12,7 @@ class AR:
         return X, y
 
     @staticmethod
-    def ols_with_intercept(X, y):
+    def fit(X, y):
         D = np.column_stack([np.ones(len(X)), X])
         w = np.linalg.lstsq(D, y, rcond=None)[0]
         return w  # [c, a1..ap]

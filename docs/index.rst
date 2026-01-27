@@ -20,14 +20,10 @@ and time-varying autoregressive models.
    tutorials/mouse.ipynb
 
 .. toctree::
-   :maxdepth: 1
-   :caption: API Reference
+   :maxdepth: 2
+   :caption: Documentation
 
-   api/generators
-   api/embedders
-   api/tools
-   api/processing
-   api/models
+   api
 
 .. toctree::
    :maxdepth: 1

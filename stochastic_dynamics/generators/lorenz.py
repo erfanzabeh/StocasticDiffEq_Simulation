@@ -1,6 +1,33 @@
 import numpy as np
 
 def lorenz(T_steps=12000, dt=0.005, sigma=10.0, rho=28.0, beta=8/3, x0=(1.0,1.0,1.0)):
+    """
+    Lorenz system generator using 4th order Runge-Kutta integration.
+    
+    Parameters
+    ----------
+    T_steps : int
+        Number of time steps to simulate.
+    dt : float
+        Time step size.
+    sigma : float
+        Lorenz system parameter.
+    rho : float
+        Lorenz system parameter.
+    beta : float
+        Lorenz system parameter.
+    x0 : tuple of floats
+        Initial conditions (x0, y0, z0).
+
+    Returns
+    -------
+    tuple of np.ndarray
+        Arrays containing the x, y, and z coordinates of the Lorenz system trajectory.
+
+    Example
+    -------
+    >>> x, y, z = lorenz()
+    """
     x, y, z = x0
     xs, ys, zs = [], [], []
     for _ in range(T_steps):

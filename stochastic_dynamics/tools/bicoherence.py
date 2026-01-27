@@ -1,10 +1,3 @@
-"""
-Bicoherence Tool
-================
-
-Higher-order spectral analysis for detecting quadratic phase coupling.
-"""
-
 import numpy as np
 from typing import Optional
 
