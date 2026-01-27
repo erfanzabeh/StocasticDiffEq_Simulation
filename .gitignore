@@ -219,3 +219,5 @@ __marimo__/
 notebooks/data/*
 *.npz
 *.pt
+
+*.DS_Store
