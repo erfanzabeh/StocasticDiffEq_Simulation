@@ -48,3 +48,17 @@ class AR:
         aic = n*np.log(sigma2 + 1e-12) + 2*k
         bic = n*np.log(sigma2 + 1e-12) + k*np.log(max(n, 2))
         return aic, bic
+    
+    @staticmethod
+    def hybrid_predict(series, w, p, start_idx, n_steps, refresh_every=1):
+        preds = []
+        hist = series[start_idx - p : start_idx].tolist()
+        for t in range(n_steps):
+            if (t % max(int(refresh_every), 1)) == 0:
+                abs_idx = start_idx + t
+                hist = series[abs_idx - p : abs_idx].tolist()
+            xhat = w[0] + np.dot(w[1:], list(reversed(hist)))
+            preds.append(xhat)
+            hist.pop(0)
+            hist.append(xhat)
+        return np.array(preds)
