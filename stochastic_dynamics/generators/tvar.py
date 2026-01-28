@@ -1,86 +1,67 @@
-"""
-Time-Varying AR Generator
-=========================
+import numpy as np
 
-Univariate AR(2) with sinusoidally varying coefficients.
-
-Model:
-    x(t) = a1(t) * x(t-1) + a2(t) * x(t-2) + ε(t)
+def tvar(p, T=600, W=40, P0=0.5, sigma_noise=0.1, burnin=300, max_attempts=100):
+    """Generate one TVAR(p) sample with power constraint and burnin.
     
-where a1(t) and a2(t) vary smoothly over time:
-    a1(t) = a1_base + a1_amp * sin(2π * t / a1_period + a1_phase)
-    a2(t) = a2_base + a2_amp * sin(2π * t / a2_period + a2_phase)
-
-Source: TimeVariying_AR_Simualtion.ipynb
-"""
-
-import jax
-import jax.numpy as jnp
-from jax import random
-from functools import partial
-from typing import Tuple
-
-
-@partial(jax.jit, static_argnums=(0, 1))
-def tvar(n_steps: int, burn_in: int = 200, a1_base: float = 0.6, a1_amp: float = 0.3, 
-         a1_period: float = 400.0, a1_phase: float = 0.0, a2_base: float = -0.3, 
-         a2_amp: float = 0.2, a2_period: float = 600.0, a2_phase: float = 1.2,
-         noise_std: float = 0.1, seed: int = 42) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+    Args:
+        p (int): Order of the TVAR model.
+        T (int): Length of the desired output time series.
+        W (int): Window size for power constraint.
+        P0 (float): Maximum allowed power in any window of size W.
+        sigma_noise (float): Standard deviation of the Gaussian noise.
+        burnin (int): Number of initial samples to discard.
+        max_attempts (int): Maximum number of attempts to generate a valid sample.
     """
-    Univariate Time-Varying AR(2) generator.
     
-    Coefficients vary sinusoidally:
-        a1(t) = a1_base + a1_amp * sin(2π * t / a1_period + a1_phase)
-        a2(t) = a2_base + a2_amp * sin(2π * t / a2_period + a2_phase)
+    T_total = T + burnin
     
-    Parameters
-    ----------
-    n_steps : int
-        Number of time steps (after burn-in).
-    burn_in : int
-        Number of initial samples to discard.
-    a1_base, a1_amp, a1_period, a1_phase : float
-        Parameters for a1(t) coefficient.
-    a2_base, a2_amp, a2_period, a2_phase : float
-        Parameters for a2(t) coefficient.
-    noise_std : float
-        Standard deviation of innovation noise.
-    seed : int
-        Random seed.
+    # Coefficient functions - scaled for stability
+    base_freqs = [1/150, 1/200, 1/180, 1/220, 1/170, 1/190]
+    base_amps = [0.35, 0.25, 0.20, 0.15, 0.12, 0.10]
+    base_offsets = [0.6, -0.5, 0.3, -0.2, 0.15, -0.1]
+    scale = 1.0 / np.sqrt(p)
     
-    Returns
-    -------
-    tuple
-        (data, a1, a2) where:
-        - data: (n_steps,) signal
-        - a1: (n_steps,) first AR coefficient over time
-        - a2: (n_steps,) second AR coefficient over time
+    for attempt in range(max_attempts):
+        # Generate coefficients
+        coeffs_full = np.zeros((T_total, p))
+        for k in range(p):
+            freq = base_freqs[k % 6]
+            amp = base_amps[k % 6] * scale
+            offset = base_offsets[k % 6] * scale
+            phase = k * np.pi / 4
+            t_arr = np.arange(T_total)
+            if k % 2 == 0:
+                coeffs_full[:, k] = offset + amp * np.sin(2 * np.pi * freq * t_arr + phase)
+            else:
+                coeffs_full[:, k] = offset + amp * np.cos(2 * np.pi * freq * t_arr + phase)
+        
+        # Simulate signal
+        x_full = np.zeros(T_total)
+        for i in range(T_total):
+            val = np.random.normal(scale=sigma_noise)
+            for k in range(p):
+                if i > k:
+                    val += coeffs_full[i, k] * x_full[i - k - 1]
+            x_full[i] = val
+            
+            if i >= W - 1:
+                window = x_full[i - W + 1:i + 1]
+                current_power = np.mean(window ** 2)
+                if current_power > 0:
+                    s = np.clip(np.sqrt(P0 / current_power), 0.8, 1.2)
+                    x_full[i] *= s
+        
+        # Discard burnin
+        x = x_full[burnin:]
+        coeffs = coeffs_full[burnin:]
+        
+        # Check power constraint (same logic as original)
+        power = np.zeros(T)
+        for i in range(T):
+            start = max(0, i - W + 1)
+            power[i] = np.mean(x[start:i + 1] ** 2)
+        
+        if power.max() <= P0:
+            return x, coeffs
     
-    Example
-    -------
-    >>> x, a1, a2 = tvar(3000)
-    """
-    key = random.PRNGKey(seed)
-    T_total = n_steps + burn_in
-    
-    t = jnp.arange(T_total, dtype=jnp.float32)
-    a1_full = a1_base + a1_amp * jnp.sin(2.0 * jnp.pi * t / a1_period + a1_phase)
-    a2_full = a2_base + a2_amp * jnp.sin(2.0 * jnp.pi * t / a2_period + a2_phase)
-    
-    eps = random.normal(key, shape=(T_total,)) * noise_std
-    
-    def ar2_step(carry, inputs):
-        x_prev1, x_prev2 = carry
-        a1_t, a2_t, eps_t = inputs
-        x_t = a1_t * x_prev1 + a2_t * x_prev2 + eps_t
-        return (x_t, x_prev1), x_t
-    
-    init_carry = (0.0, 0.0)
-    inputs = (a1_full, a2_full, eps)
-    _, x_full = jax.lax.scan(ar2_step, init_carry, inputs)
-    
-    data = x_full[burn_in:]
-    a1 = a1_full[burn_in:]
-    a2 = a2_full[burn_in:]
-    
-    return data, a1, a2
+    raise ValueError(f"Failed to generate valid sample after {max_attempts} attempts")

@@ -36,4 +36,4 @@ Generators
 Utilities
 =========
 
-.. autofunction:: stochastic_dynamics.tools.bicoherence
+.. autofunction:: stochastic_dynamics.utils.bicoherence
