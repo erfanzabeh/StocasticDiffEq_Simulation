@@ -219,6 +219,7 @@ __marimo__/
 notebooks/data/*
 *.npz
 *.pt
+*.pyc
 
 *.DS_Store
 */__pycache__/*
