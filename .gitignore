@@ -221,3 +221,4 @@ notebooks/data/*
 *.pt
 
 *.DS_Store
+*/__pycache__/*
