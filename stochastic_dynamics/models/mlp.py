@@ -1,73 +1,39 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
-class MLPTVAR(nn.Module):
-    """
-    MLP-based Time-Varying AR model with multi-head outputs.
-
-    Predicts AR coefficients, bias, and order from a window of past observations.
-    """
-
-    def __init__(
-        self, max_ar_order=6, n_classes=5, hidden_dim=128, depth=3, dropout=0.1
-    ):
-        """
-        Args:
-            max_ar_order: Maximum AR order (window size / number of lags)
-            n_classes: Number of AR order classes for classification head
-            hidden_dim: Hidden layer dimension
-            depth: Number of hidden layers in backbone
-            dropout: Dropout rate
-        """
+class ARMLP(nn.Module):
+    def __init__(self, seq_len=600, n_classes=5, max_ar_order=6, hidden_dim=128):
         super().__init__()
-        self.max_ar_order = max_ar_order
+        self.seq_len = seq_len
         self.n_classes = n_classes
-
-        # Backbone: shared feature extractor
-        layers = []
-        in_dim = max_ar_order
-        for _ in range(depth):
-            layers += [
-                nn.Linear(in_dim, hidden_dim),
-                nn.GELU(),
-                nn.LayerNorm(hidden_dim),
-                nn.Dropout(dropout),
-            ]
-            in_dim = hidden_dim
-        self.backbone = nn.Sequential(*layers)
-
-        # Output heads
-        self.coeff_head = nn.Linear(hidden_dim, max_ar_order)  # AR coefficients
-        self.bias_head = nn.Linear(hidden_dim, 1)  # Bias term
-        self.p_head = nn.Linear(hidden_dim, n_classes)  # Order classification
-
-    def forward(self, x):
-        """
-        Args:
-            x: (N, max_ar_order) window of past observations [x_{t-1}, ..., x_{t-p}]
-
-        Returns:
-            coeffs: (N, max_ar_order) predicted AR coefficients
-            p_logits: (N, n_classes) logits for order classification
-            p_hard: (N,) predicted order class (argmax)
-            x_hat: (N,) predicted next value
-        """
+        self.max_ar_order = max_ar_order
+        
+        # Simple MLP: input -> hidden -> hidden -> coefficients
+        self.mlp = nn.Sequential(
+            nn.Linear(seq_len, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, seq_len * max_ar_order)
+        )
+    
+    def forward(self, x, temperature=1.0):
         N = x.shape[0]
-
-        # Shared backbone
-        h = self.backbone(x)  # (N, hidden_dim)
-
-        # Output heads
-        coeffs = self.coeff_head(h)  # (N, max_ar_order)
-        bias = self.bias_head(h).squeeze(-1)  # (N,)
-        p_logits = self.p_head(h)  # (N, n_classes)
-
-        # Order prediction
-        p_hard = torch.argmax(p_logits, dim=-1)  # (N,)
-
-        # Predicted value: linear combination of lags
-        x_hat = (coeffs * x).sum(dim=1) + bias  # (N,)
-
+        device = x.device
+        
+        # MLP outputs all coefficients directly
+        coeffs = self.mlp(x).view(N, self.seq_len, self.max_ar_order)  # (N, 600, 6)
+        
+        # No order prediction — return zeros for compatibility
+        p_logits = torch.zeros(N, self.n_classes, device=device)
+        p_hard = torch.zeros(N, dtype=torch.long, device=device)
+        
+        # AR reconstruction: x_hat[t] = sum_k coeffs[t,k] * x[t-k-1]
+        x_lagged = torch.zeros(N, self.seq_len, self.max_ar_order, device=device)
+        for k in range(self.max_ar_order):
+            x_lagged[:, k+1:, k] = x[:, :self.seq_len - k - 1]
+        
+        x_hat = (coeffs * x_lagged).sum(dim=-1)  # (N, 600)
+        
         return coeffs, p_logits, p_hard, x_hat

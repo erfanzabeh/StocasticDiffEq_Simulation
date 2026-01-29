@@ -21,8 +21,16 @@ def train_loop(
     p_max=6,
     device='cuda'
 ):
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, factor=0.5)
+    params = list(model.parameters())
+    
+    if len(params) > 0:
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, factor=0.5)
+        has_params = True
+    else:
+        optimizer = None
+        scheduler = None
+        has_params = False
     
     history = {
         'train_loss': [], 'train_p': [], 'train_ar': [], 'train_energy': [], 'train_smooth': [], 'train_order': [], 'train_p_acc': [],
@@ -41,7 +49,8 @@ def train_loop(
             x_batch = x_batch.to(device)
             p_batch = p_batch.to(device)
             
-            optimizer.zero_grad()
+            if has_params:
+                optimizer.zero_grad()
             
             coeffs, p_logits, p_hard, x_hat = model(x_batch)
             
@@ -53,8 +62,9 @@ def train_loop(
             
             total_loss = lambda_p * l_p + lambda_ar * l_ar + lambda_energy * l_energy + lambda_smooth * l_smooth + lambda_order * l_order
             
-            total_loss.backward()
-            optimizer.step()
+            if has_params:
+                total_loss.backward()
+                optimizer.step()
             
             train_losses['total'].append(total_loss.item())
             train_losses['p'].append(l_p.item())
@@ -113,7 +123,8 @@ def train_loop(
         history['val_order'].append(np.mean(val_losses['order']))
         history['val_p_acc'].append(val_correct / val_total)
         
-        scheduler.step(history['val_loss'][-1])
+        if has_params:
+            scheduler.step(history['val_loss'][-1])
         
         
         pbar.update(1)
