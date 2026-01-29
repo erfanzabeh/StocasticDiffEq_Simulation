@@ -32,7 +32,20 @@ def bench_loop(model, X_val, coef_val, p_val, device, p_min=2, p_max=6, p_max_or
     coeff_mse = float(np.mean((all_coeffs_pred - coef_val) ** 2))
     signal_mse = float(np.mean((all_x_hat[:, p_max_order:] - X_np[:, p_max_order:]) ** 2))
     
-    results = {'coeff_mse': coeff_mse, 'signal_mse': signal_mse}
+    # Convert class indices back to actual p values for MAE calculation
+    p_true_actual = p_true + p_min
+    p_pred_actual = all_p_pred + p_min
+    
+    # Mean absolute delta p / p (relative error)
+    p_mae = float(np.mean(np.abs(p_pred_actual - p_true_actual)))
+    p_mape = float(np.mean(np.abs(p_pred_actual - p_true_actual) / p_true_actual))
+    
+    results = {
+        'coeff_mse': coeff_mse, 
+        'signal_mse': signal_mse,
+        'p_mae': p_mae,        # Mean absolute error in p
+        'p_mape': p_mape,      # Mean absolute percentage error |delta_p| / p_true
+    }
     for p_idx in range(n_classes):
         p_actual = p_idx + p_min
         mask = (p_true == p_idx)
